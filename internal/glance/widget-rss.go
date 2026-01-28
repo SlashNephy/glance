@@ -309,10 +309,10 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 			rssItem.ChannelName = feed.Title
 		}
 
-		if item.Image != nil {
-			rssItem.ImageURL = item.Image.URL
-		} else if url := findThumbnailInItemExtensions(item); url != "" {
+		if url := findThumbnailInItemExtensions(item); url != "" {
 			rssItem.ImageURL = url
+		} else if item.Image != nil {
+			rssItem.ImageURL = item.Image.URL
 		} else if feed.Image != nil {
 			if len(feed.Image.URL) > 0 && feed.Image.URL[0] == '/' {
 				rssItem.ImageURL = strings.TrimRight(feed.Link, "/") + feed.Image.URL
@@ -344,6 +344,14 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 }
 
 func findThumbnailInItemExtensions(item *gofeed.Item) string {
+	// Support hatena:imageurl extension
+	// https://b.hatena.ne.jp/hotentry.rss
+	if hatena, ok := item.Extensions["hatena"]; ok {
+		if imageUrls, ok := hatena["imageurl"]; ok && len(imageUrls) > 0 {
+			return imageUrls[0].Value
+		}
+	}
+
 	media, ok := item.Extensions["media"]
 
 	if !ok {
