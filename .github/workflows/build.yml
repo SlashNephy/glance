@@ -16,3 +16,6 @@ jobs:
       security-events: write
     with:
       image-name: ghcr.io/slashnephy/glance
+      dispatch-update-image-digest: true
+    secrets:
+      dispatch-github-token: ${{ secrets.BOT_GITHUB_TOKEN }}
