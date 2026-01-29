@@ -320,6 +320,10 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 				rssItem.ImageURL = feed.Image.URL
 			}
 		}
+		if rssItem.ImageURL == "" {
+			// XXX: should use Server.BaseURL here
+			rssItem.ImageURL = "/api/og-image?url=" + url.QueryEscape(rssItem.Link)
+		}
 
 		if item.PublishedParsed != nil {
 			rssItem.PublishedAt = *item.PublishedParsed
