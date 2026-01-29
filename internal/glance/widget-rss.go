@@ -38,7 +38,6 @@ type rssWidget struct {
 	CollapseAfter    int              `yaml:"collapse-after"`
 	SingleLineTitles bool             `yaml:"single-line-titles"`
 	PreserveOrder    bool             `yaml:"preserve-order"`
-	PreferOgImage    bool             `yaml:"prefer-og-image"`
 
 	Items          rssFeedItemList `yaml:"-"`
 	NoItemsMessage string          `yaml:"-"`
@@ -137,6 +136,7 @@ type rssFeedRequest struct {
 	Limit           int               `yaml:"limit"`
 	ItemLinkPrefix  string            `yaml:"item-link-prefix"`
 	Headers         map[string]string `yaml:"headers"`
+	PreferOgImage   bool              `yaml:"prefer-og-image"`
 	IsDetailed      bool              `yaml:"-"`
 }
 
@@ -313,7 +313,7 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 		// XXX: should use Server.BaseURL here
 		ogImageURL := "/api/og-image?url=" + url.QueryEscape(rssItem.Link)
 
-		if widget.PreferOgImage {
+		if request.PreferOgImage {
 			rssItem.ImageURL = ogImageURL
 		} else if url := findThumbnailInItemExtensions(item); url != "" {
 			rssItem.ImageURL = url
