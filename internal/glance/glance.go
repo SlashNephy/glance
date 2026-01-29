@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/glanceapp/glance/pkg/ogimage"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -449,6 +450,7 @@ func (a *application) server() (func() error, func() error) {
 	mux.HandleFunc("GET /api/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+	mux.HandleFunc("GET /api/og-image", ogimage.Handler(defaultHTTPClient, glanceUserAgentString))
 
 	if a.RequiresAuth {
 		mux.HandleFunc("GET /login", a.handleLoginPageRequest)
