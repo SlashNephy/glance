@@ -318,13 +318,9 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 		} else if url := findThumbnailInItemExtensions(item); url != "" {
 			rssItem.ImageURL = url
 		} else if item.Image != nil {
-			rssItem.ImageURL = item.Image.URL
+			rssItem.ImageURL = resolveImageURL(item.Image.URL, request.URL)
 		} else if feed.Image != nil {
-			if len(feed.Image.URL) > 0 && feed.Image.URL[0] == '/' {
-				rssItem.ImageURL = strings.TrimRight(feed.Link, "/") + feed.Image.URL
-			} else {
-				rssItem.ImageURL = feed.Image.URL
-			}
+			rssItem.ImageURL = resolveImageURL(feed.Image.URL, request.URL)
 		} else {
 			rssItem.ImageURL = ogImageURL
 		}
@@ -349,6 +345,25 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 	}
 
 	return items, nil
+}
+
+func resolveImageURL(imageURL, requestURL string) string {
+	parsedImageURL, err := url.Parse(imageURL)
+	if err != nil {
+		return imageURL
+	}
+
+	switch parsedImageURL.Scheme {
+	case "http", "https":
+		return imageURL
+	}
+
+	parsedRequestURL, err := url.Parse(requestURL)
+	if err != nil {
+		return imageURL
+	}
+
+	return parsedRequestURL.ResolveReference(parsedImageURL).String()
 }
 
 func findThumbnailInItemExtensions(item *gofeed.Item) string {
