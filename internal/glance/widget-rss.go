@@ -38,6 +38,7 @@ type rssWidget struct {
 	CollapseAfter    int              `yaml:"collapse-after"`
 	SingleLineTitles bool             `yaml:"single-line-titles"`
 	PreserveOrder    bool             `yaml:"preserve-order"`
+	PreferOgImage    bool             `yaml:"prefer-og-image"`
 
 	Items          rssFeedItemList `yaml:"-"`
 	NoItemsMessage string          `yaml:"-"`
@@ -285,7 +286,7 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 			}
 
 			if !request.HideCategories {
-				var categories = make([]string, 0, 6)
+				categories := make([]string, 0, 6)
 
 				for _, category := range item.Categories {
 					if len(categories) == 6 {
@@ -309,7 +310,12 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 			rssItem.ChannelName = feed.Title
 		}
 
-		if url := findThumbnailInItemExtensions(item); url != "" {
+		// XXX: should use Server.BaseURL here
+		ogImageURL := "/api/og-image?url=" + url.QueryEscape(rssItem.Link)
+
+		if widget.PreferOgImage {
+			rssItem.ImageURL = ogImageURL
+		} else if url := findThumbnailInItemExtensions(item); url != "" {
 			rssItem.ImageURL = url
 		} else if item.Image != nil {
 			rssItem.ImageURL = item.Image.URL
@@ -319,10 +325,8 @@ func (widget *rssWidget) fetchItemsFromFeedTask(request rssFeedRequest) ([]rssFe
 			} else {
 				rssItem.ImageURL = feed.Image.URL
 			}
-		}
-		if rssItem.ImageURL == "" {
-			// XXX: should use Server.BaseURL here
-			rssItem.ImageURL = "/api/og-image?url=" + url.QueryEscape(rssItem.Link)
+		} else {
+			rssItem.ImageURL = ogImageURL
 		}
 
 		if item.PublishedParsed != nil {
